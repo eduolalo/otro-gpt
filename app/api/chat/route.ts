@@ -53,9 +53,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const systemMessage = {
+      role: "system" as const,
+      content:
+        "Eres otro-GPT, un asistente útil. REGLA IMPORTANTE: Nunca generes imágenes en SVG, ASCII art, código de imagen, ni ningún formato visual basado en texto. Si el usuario pide una imagen, responde exactamente: 'Para generar imágenes, usa el botón de imagen (ícono 🖼️) en la esquina superior derecha. Ahí puedes describir lo que quieres y se generará con DALL-E 3 en formato PNG.' No intentes dar alternativas ni workarounds para generar imágenes.",
+    };
+
     const completion = await openai.chat.completions.create({
       model: "gpt-5",
-      messages,
+      messages: [systemMessage, ...messages],
     });
 
     const reply = completion.choices[0]?.message;
