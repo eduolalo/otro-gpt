@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 
 type MessageType = "text" | "image" | "audio";
 type Mode = "chat" | "image" | "tts";
+type Provider = "openai" | "anthropic";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -23,6 +24,7 @@ export default function Home() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [mode, setMode] = useState<Mode>("chat");
+  const [provider, setProvider] = useState<Provider>("openai");
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -62,7 +64,7 @@ export default function Home() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updatedMessages }),
+        body: JSON.stringify({ messages: updatedMessages, provider }),
       });
 
       const data = await res.json();
@@ -314,13 +316,27 @@ export default function Home() {
             </div>
             <h1 className="text-lg font-semibold tracking-tight">otro-GPT</h1>
           </div>
-          <button
-            onClick={clearChat}
-            className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            title="Limpiar chat"
-          >
-            <Trash2 className="h-4.5 w-4.5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <select
+              value={provider}
+              onChange={(e) => {
+                const val = e.target.value as Provider;
+                setProvider(val);
+                if (val === "anthropic") setMode("chat");
+              }}
+              className="rounded-lg border border-border bg-muted px-2.5 py-1.5 text-xs font-medium text-foreground focus:border-foreground/20 focus:outline-none"
+            >
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic</option>
+            </select>
+            <button
+              onClick={clearChat}
+              className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              title="Limpiar chat"
+            >
+              <Trash2 className="h-4.5 w-4.5" />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -417,19 +433,21 @@ export default function Home() {
                       <div className="text-[0.9375rem] leading-relaxed">
                         <ReactMarkdown>{msg.content}</ReactMarkdown>
                       </div>
-                      <button
-                        onClick={() => speakText(msg.content)}
-                        disabled={isSpeaking}
-                        className="mt-1 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
-                        title="Escuchar respuesta"
-                      >
-                        {isSpeaking ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Volume2 className="h-3.5 w-3.5" />
-                        )}
-                        Escuchar
-                      </button>
+                      {provider === "openai" && (
+                        <button
+                          onClick={() => speakText(msg.content)}
+                          disabled={isSpeaking}
+                          className="mt-1 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
+                          title="Escuchar respuesta"
+                        >
+                          {isSpeaking ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Volume2 className="h-3.5 w-3.5" />
+                          )}
+                          Escuchar
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -453,31 +471,33 @@ export default function Home() {
       {/* Input */}
       <footer className="border-t border-border bg-background">
         {/* Mode Tabs */}
-        <div className="mx-auto flex max-w-2xl justify-center gap-1 px-4 pt-3 sm:px-6">
-          {([
-            { key: "chat" as Mode, label: "Texto", icon: MessageSquare },
-            { key: "image" as Mode, label: "Imagen", icon: ImageIcon },
-            { key: "tts" as Mode, label: "Texto a Audio", icon: Volume2 },
-          ]).map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              onClick={() => setMode(key)}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                mode === key
-                  ? "bg-foreground text-background"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              {label}
-            </button>
-          ))}
-        </div>
+        {provider === "openai" && (
+          <div className="mx-auto flex max-w-2xl justify-center gap-1 px-4 pt-3 sm:px-6">
+            {([
+              { key: "chat" as Mode, label: "Texto", icon: MessageSquare },
+              { key: "image" as Mode, label: "Imagen", icon: ImageIcon },
+              { key: "tts" as Mode, label: "Texto a Audio", icon: Volume2 },
+            ]).map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setMode(key)}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                  mode === key
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
         <form
           onSubmit={handleSubmit}
           className="mx-auto flex max-w-2xl items-end gap-3 px-4 py-3 sm:px-6"
         >
-          {mode === "chat" && (
+          {mode === "chat" && provider === "openai" && (
             <button
               type="button"
               onClick={toggleRecording}
