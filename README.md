@@ -1,3 +1,13 @@
+# Proyecto llamado OtroGPT
+
+Este es un proyecto de Next.js que utilizamos para agregarle vida usando las APIs de OpenAI, Anthropic, Google Gemini y otras para crear un asistente inteligente.
+
+Este proyecto fue creado en el curso de APIs y LLMs de Platzi.
+
+--------------
+
+Documentación de Next.js: https://nextjs.org/docs
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
