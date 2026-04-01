@@ -1,12 +1,23 @@
 "use client";
 
 import { useState, useRef, useEffect, FormEvent, KeyboardEvent } from "react";
-import { Send, Trash2, Bot, Image as ImageIcon, Volume2, Mic, MicOff, Loader2, Download, MessageSquare } from "lucide-react";
+import {
+  Send,
+  Trash2,
+  Bot,
+  Image as ImageIcon,
+  Volume2,
+  Mic,
+  MicOff,
+  Loader2,
+  Download,
+  MessageSquare,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 type MessageType = "text" | "image" | "audio";
 type Mode = "chat" | "image" | "tts";
-type Provider = "openai" | "anthropic";
+type Provider = "openai" | "anthropic" | "gemini";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -283,7 +294,10 @@ export default function Home() {
         try {
           const formData = new FormData();
           formData.append("audio", blob, "recording.webm");
-          const res = await fetch("/api/stt", { method: "POST", body: formData });
+          const res = await fetch("/api/stt", {
+            method: "POST",
+            body: formData,
+          });
           const data = await res.json();
           if (data.error) {
             console.error("STT error:", data.error);
@@ -322,12 +336,13 @@ export default function Home() {
               onChange={(e) => {
                 const val = e.target.value as Provider;
                 setProvider(val);
-                if (val === "anthropic") setMode("chat");
+                if (val === "anthropic" || val === "gemini") setMode("chat");
               }}
               className="rounded-lg border border-border bg-muted px-2.5 py-1.5 text-xs font-medium text-foreground focus:border-foreground/20 focus:outline-none"
             >
               <option value="openai">OpenAI</option>
               <option value="anthropic">Anthropic</option>
+              <option value="gemini">Gemini</option>
             </select>
             <button
               onClick={clearChat}
@@ -353,9 +368,12 @@ export default function Home() {
                   Hola, soy otro-GPT
                 </h2>
                 <p className="mt-1.5 text-sm text-muted-foreground">
-                  {mode === "chat" && "Escribe un mensaje para comenzar la conversación."}
-                  {mode === "image" && "Describe la imagen que quieres generar con DALL-E 3."}
-                  {mode === "tts" && "Escribe un texto para convertirlo en audio."}
+                  {mode === "chat" &&
+                    "Escribe un mensaje para comenzar la conversación."}
+                  {mode === "image" &&
+                    "Describe la imagen que quieres generar con DALL-E 3."}
+                  {mode === "tts" &&
+                    "Escribe un texto para convertirlo en audio."}
                 </p>
               </div>
             </div>
@@ -473,11 +491,11 @@ export default function Home() {
         {/* Mode Tabs */}
         {provider === "openai" && (
           <div className="mx-auto flex max-w-2xl justify-center gap-1 px-4 pt-3 sm:px-6">
-            {([
+            {[
               { key: "chat" as Mode, label: "Texto", icon: MessageSquare },
               { key: "image" as Mode, label: "Imagen", icon: ImageIcon },
               { key: "tts" as Mode, label: "Texto a Audio", icon: Volume2 },
-            ]).map(({ key, label, icon: Icon }) => (
+            ].map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
                 onClick={() => setMode(key)}
